@@ -297,3 +297,49 @@ async function runTechAdvisor() {
         loading.classList.add('hidden');
     }
 }
+// Function to fetch and update Santa's status
+async function updateSantaTracker() {
+    try {
+        const response = await fetch('/api/santa-status');
+        const data = await response.json();
+        
+        document.getElementById('tracker-location').innerText = data.location;
+        document.getElementById('tracker-status').innerText = data.status;
+        document.getElementById('tracker-speed').innerText = data.speed_mph.toLocaleString() + ' mph';
+        document.getElementById('tracker-presents').innerText = data.presents_delivered.toLocaleString();
+        document.getElementById('tracker-cookies').innerText = data.cookies_eaten.toLocaleString();
+    } catch (error) {
+        console.error('Error fetching Santa status:', error);
+    }
+}
+
+// Countdown timer to Christmas Eve (Dec 24)
+function updateCountdown() {
+    const now = new Date();
+    let christmas = new Date(now.getFullYear(), 11, 24); // Dec 24
+    if (now > christmas) {
+        christmas.setFullYear(christmas.getFullYear() + 1);
+    }
+    
+    const diff = christmas - now;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diff / 1000 / 60) % 60);
+    const seconds = Math.floor((diff / 1000) % 60);
+    
+    const countdownEl = document.getElementById('christmas-countdown');
+    if (countdownEl) {
+        countdownEl.innerText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    }
+}
+
+// Run tracker updates on load and set intervals
+document.addEventListener('DOMContentLoaded', () => {
+    updateSantaTracker();
+    updateCountdown();
+    
+    // Refresh Santa location every 6 seconds
+    setInterval(updateSantaTracker, 6000);
+    // Update countdown every second
+    setInterval(updateCountdown, 1000);
+});
