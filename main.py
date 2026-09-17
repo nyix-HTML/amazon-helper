@@ -3,24 +3,23 @@ from __future__ import annotations
 import asyncio
 import json
 import logging
-import re
-from typing import List, Optional
-from urllib.parse import urlparse
+from typing import List
 
-import aiohttp
-from bs4 import BeautifulSoup
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, HttpUrl
 from google import genai
 from google.genai import types
 
+# Import the scraping function from your separate scraper file
+from scraper import scrape_amazon_product
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="AI Amazon Bundle Analyzer")
 
-# Client will pick up GEMINI_API_KEY from environment variables automatically.
+# Client picks up GEMINI_API_KEY from environment variables automatically
 client = genai.Client()
 
 class ProductInput(BaseModel):
@@ -40,95 +39,6 @@ class CartSummary(BaseModel):
     total_sale_price: float
     currency: str
 
-async def scrape_amazon_product(url: str) -> dict:
-    headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/115.0.0.0 Safari/537.36"
-        ),
-        "Accept-Language": "en-US, en;q=0.5",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
-    }
-    
-    parsed_url = urlparse(url)
-    if not parsed_url.netloc or "amazon" not in parsed_url.netloc:
-        raise HTTPException(status_code=400, detail=f"Invalid Amazon URL: {url}")
-
-    async with aiohttp.ClientSession(headers=headers) as session:
-        try:
-            async with session.get(url, timeout=15) as response:
-                if response.status != 200:
-                    raise HTTPException(
-                        status_code=502, 
-                        detail=f"Failed to fetch page, status code: {response.status} for URL: {url}"
-                    )
-                html = await response.text()
-        except asyncio.TimeoutError:
-            raise HTTPException(status_code=504, detail=f"Timeout while fetching URL: {url}")
-        except Exception as e:
-            logger.error(f"Network error scraping {url}: {e}")
-            raise HTTPException(status_code=500, detail=f"Network error while fetching URL: {url}")
-
-    soup = BeautifulSoup(html, "html.parser")
-
-    # Extract Title
-    title_elem = soup.select_one("#productTitle")
-    title = title_elem.get_text(strip=True) if title_elem else "Unknown Product"
-
-    # Extract Prices
-    price_str = None
-    original_price_str = None
-
-    # Common Amazon price selectors
-    price_whole = soup.select_one(".priceToPay .a-price-whole")
-    price_fraction = soup.select_one(".priceToPay .a-price-fraction")
-    if price_whole and price_fraction:
-        price_str = f"{price_whole.get_text(strip=True)}{price_fraction.get_text(strip=True)}"
-
-    if not price_str:
-        # Fallback to apex price or regular price
-        alt_price = soup.select_one(".a-price .a-offscreen")
-        if alt_price:
-            price_str = alt_price.get_text(strip=True)
-
-    # Extract List Price (Original Price before sale)
-    list_price_elem = soup.select_one(".basisPrice .a-offscreen") or soup.select_one("span.priceBlockStrikePriceString")
-    if list_price_elem:
-        original_price_str = list_price_elem.get_text(strip=True)
-
-    def clean_price(p: Optional[str]) -> float:
-        if not p:
-            return 0.0
-        cleaned = re.sub(r"[^\d.]", "", p)
-        try:
-            return float(cleaned)
-        except ValueError:
-            return 0.0
-
-    sale_val = clean_price(price_str)
-    orig_val = clean_price(original_price_str)
-
-    if orig_val == 0.0 or orig_val < sale_val:
-        orig_val = sale_val if sale_val > 0.0 else 0.0
-
-    if sale_val == 0.0 and orig_val > 0.0:
-        sale_val = orig_val
-
-    # Detect currency symbol roughly
-    currency = "$"
-    if price_str and "€" in price_str:
-        currency = "€"
-    elif price_str and "£" in price_str:
-        currency = "£"
-
-    return {
-        "title": title,
-        "original_price": orig_val,
-        "sale_price": sale_val,
-        "currency": currency
-    }
-
 async def analyze_product_with_ai(product_data: dict) -> dict:
     prompt = f"""
     Analyze the following product details extracted from an e-commerce page:
@@ -139,7 +49,7 @@ async def analyze_product_with_ai(product_data: dict) -> dict:
     1. "weather_suitability": Evaluate how weather conditions (e.g., rain, extreme heat, cold, humidity, indoor-only usage) affect this product's performance, durability, or usability. 
     2. "compatibility_analysis": Analyze what other hardware, software, accessories, or specific connection standards this item physically or digitally requires to work properly (e.g., specific cables, platforms, companion devices, sockets). If the item is entirely standalone and requires no supplementary connections, tools, or companion elements, explicitly state "Standalone item; no external dependencies or compatibility requirements."
 
-    Return strictly a JSON object with keys: "weather_suitability" and "compatibility_analysis". Do not wrap the JSON in markdown code blocks if possible, or just provide raw keys.
+    Return strictly a JSON object with keys: "weather_suitability" and "compatibility_analysis".
     """
 
     try:
