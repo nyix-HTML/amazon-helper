@@ -1,6 +1,7 @@
 from __future__ import annotations
 import os
 import random
+from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -10,13 +11,15 @@ from scraper import scrape_amazon_product
 
 app = FastAPI(title="Holiday E-Commerce & Santa Tracker Hub")
 
+BASE_DIR = Path(__file__).resolve().parent
+
 # Safety checks for directories
-os.makedirs("static", exist_ok=True)
-os.makedirs("templates", exist_ok=True)
+os.makedirs(BASE_DIR / "static", exist_ok=True)
+os.makedirs(BASE_DIR / "templates", exist_ok=True)
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
-templates = Jinja2Templates(directory="templates")
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 # Workaround for the Jinja2/Starlette caching bug on Render
 templates.env.cache = None
 
