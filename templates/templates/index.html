@@ -37,7 +37,16 @@
             <div id="clicker-score" class="text-sm font-black text-amber-400">✨ 0 Points</div>
         </div>
     </div>
-
+<!-- Add this right next to your season selector widget in the top right -->
+<div class="absolute top-4 left-4 z-20 bg-slate-900/80 border-2 border-slate-700/60 backdrop-blur-md px-4 py-2 rounded-2xl shadow-2xl flex items-center gap-3">
+    <div>
+        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-wider">Shopping Mode</label>
+        <button onclick="toggleBoringMode()" id="boring-mode-btn" class="mt-0.5 px-3 py-1 bg-slate-950 text-xs font-bold text-slate-300 border border-slate-700 rounded-lg hover:border-sky-500 transition-all">
+            📊 Mode: Fun & Cute
+        </button>
+    </div>
+</div>
+    
     <div class="max-w-4xl w-full bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl shadow-2xl p-8 relative z-10 mt-6 space-y-8 transition-all" id="main-card">
         
         <!-- Header Section -->
