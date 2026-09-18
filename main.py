@@ -19,12 +19,11 @@ os.makedirs(BASE_DIR / "templates", exist_ok=True)
 
 app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
+# Keep only this single templates definition pointing to the nested folder
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates" / "templates"))
+
 # Workaround for the Jinja2/Starlette caching bug on Render
 templates.env.cache = None
-
-class ProductRequest(BaseModel):
-    url: str
 
 @app.get("/")
 async def read_root(request: Request):
