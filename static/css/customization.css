@@ -1,17 +1,26 @@
-@keyframes snowfall {
-    0% { transform: translateY(-10vh) translateX(0); opacity: 1; }
-    100% { transform: translateY(105vh) translateX(20px); opacity: 0.2; }
+@keyframes fallAnimation {
+    0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(105vh) translateX(30px) rotate(360deg); opacity: 0.2; }
 }
 
-.snowflake {
+.particle {
     position: fixed;
     top: -10vh;
-    background: white;
     border-radius: 50%;
-    pointer-events: none;
-    animation: snowfall linear infinite;
+    cursor: pointer;
+    animation: fallAnimation linear infinite;
+    transition: transform 0.2s, background-color 0.2s;
 }
 
+.particle:hover {
+    transform: scale(1.8);
+}
+
+.snowflake { background: white; box-shadow: 0 0 6px white; }
+.petal { background: #f472b6; box-shadow: 0 0 6px #f472b6; border-radius: 40% 60% 50% 50%; }
+.sunbeam { background: #facc15; box-shadow: 0 0 10px #facc15; }
+.leaf { background: #fb923c; box-shadow: 0 0 6px #fb923c; border-radius: 50% 10% 50% 10%; }
+
 .christ-glow {
-    text-shadow: 0 0 15px rgba(239, 68, 68, 0.6), 0 0 25px rgba(34, 197, 94, 0.4);
+    text-shadow: 0 0 15px rgba(244, 114, 182, 0.6), 0 0 25px rgba(250, 204, 21, 0.4);
 }
