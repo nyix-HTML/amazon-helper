@@ -1,38 +1,106 @@
-let isBoringMode = false;
+// --- Global State Management ---
+let currentSeason = 'winter';
+let isBoringNerdMode = false;
+let lastWishlistData = {
+    wishlist_name: "Ultimate Seasonal Tech Hub",
+    currency: "$",
+    total_christmas_price: 262.48,
+    items: [
+        { title: "Wireless Noise-Canceling Headphones", christmas_forecast_price: 199.99 },
+        { title: "Smart Weather Station Hub", christmas_forecast_price: 62.49 }
+    ]
+};
 
-function toggleBoringMode() {
-    isBoringMode = !isBoringMode;
-    const btn = document.getElementById('boring-mode-btn');
-    const body = document.getElementById('body-theme');
-    const mascot = document.querySelector('.fixed.bottom-6.left-6');
-
-    if (isBoringMode) {
-        btn.innerText = "📈 Mode: Boring Nerd (Serious Shopping)";
-        btn.className = "mt-0.5 px-3 py-1 bg-sky-950 text-xs font-bold text-sky-300 border border-sky-500 rounded-lg shadow-lg transition-all";
-        body.classList.add('bg-slate-990', 'grayscale-[15%]');
-        if (mascot) mascot.style.display = 'none'; // Hide cute mascot for serious shoppers
-    } else {
-        btn.innerText = "📊 Mode: Fun & Cute";
-        btn.className = "mt-0.5 px-3 py-1 bg-slate-950 text-xs font-bold text-slate-300 border border-slate-700 rounded-lg transition-all";
-        body.classList.remove('bg-slate-990', 'grayscale-[15%]');
-        if (mascot) mascot.style.display = 'flex';
-    }
-
-    if (lastWishlistData) {
-        renderWishlistItems(lastWishlistData); // Re-render items based on active mode
+// --- Season Engine Handler ---
+function changeSeason(season) {
+    currentSeason = season;
+    const badge = document.getElementById('footer-item-subtitle');
+    if (badge) {
+        badge.innerText = `Season: ${season.toUpperCase()} | Mode: ${isBoringNerdMode ? 'Boring Nerd Mode' : 'Fun & Cute'}`;
     }
 }
 
-// Updated rendering function to support Boring vs Cute views
-function renderWishlistItems(data) {
-    const itemsContainer = document.getElementById('items-container');
-    itemsContainer.innerHTML = '';
+// --- Boring Nerd Mode Toggle ---
+function toggleBoringMode() {
+    isBoringNerdMode = !isBoringNerdMode;
+    const btn = document.getElementById('boring-mode-btn');
+    
+    if (isBoringNerdMode) {
+        btn.innerText = "📊 Nerd Mode: Active";
+        btn.classList.add('border-emerald-500', 'text-emerald-400');
+        document.body.classList.add('nerd-analytics-active');
+    } else {
+        btn.innerText = "📊 Nerd Mode: Off";
+        btn.classList.remove('border-emerald-500', 'text-emerald-400');
+        document.body.classList.remove('nerd-analytics-active');
+    }
+    
+    // Refresh matrix and budget calculations in nerd style if needed
+    updatePriceMatrix();
+}
 
-    data.items.forEach((item, index) => {
-        const card = document.createElement('div');
-        // Function to generate an SVG price trajectory sparkline / chart
+// --- Feature 1: Smart Budget Allocator Logic ---
+function runSmartBudget() {
+    const budgetInput = document.getElementById('user-budget-input').value;
+    const budget = parseFloat(budgetInput) || 250;
+    const resultsContainer = document.getElementById('budget-allocation-results');
+
+    const items = [
+        { title: "Seasonal Holiday Gift Box", price: 79.99 },
+        { title: "Smart LED Ambient Light", price: 45.50 },
+        { title: "Premium Winter Tech Gloves", price: 34.00 },
+        { title: "Gourmet Coffee Sampler Pack", price: 28.99 },
+        { title: "Compact Bluetooth Speaker", price: 89.00 }
+    ];
+
+    let totalCost = items.reduce((sum, item) => sum + item.price, 0);
+    
+    if (isBoringNerdMode) {
+        // Nerd mode extra granular statistics
+        let variance = (totalCost - budget).toFixed(2);
+        resultsContainer.innerHTML = `
+            <div class="space-y-1 font-mono text-[11px]">
+                <div class="text-sky-400 font-bold">[NERD METRICS] Variance Analysis: ${variance > 0 ? '+' + variance : variance} USD</div>
+                <div>Total Sum: $${totalCost.toFixed(2)} | Target Cap: $${budget.toFixed(2)}</div>
+                <div class="${totalCost <= budget ? 'text-emerald-400' : 'text-rose-400'} font-bold">
+                    Status: ${totalCost <= budget ? 'OPTIMAL (Within Threshold)' : 'CRITICAL (Exceeds Limit)'}
+                </div>
+            </div>
+        `;
+    } else {
+        if (totalCost <= budget) {
+            resultsContainer.innerHTML = `<span class="text-emerald-400 font-bold">✅ Within Budget!</span> Total estimated items cost is $${totalCost.toFixed(2)}, which is well within your $${budget.toFixed(2)} limit.`;
+        } else {
+            let diff = (totalCost - budget).toFixed(2);
+            resultsContainer.innerHTML = `<span class="text-rose-400 font-bold">⚠️ Budget Exceeded by $${diff}!</span> Total items value: $${totalCost.toFixed(2)}.`;
+        }
+    }
+}
+
+// --- Feature 2: Multi-Store Price Comparison Matrix ---
+function updatePriceMatrix() {
+    const matrixBody = document.getElementById('price-matrix-body');
+    if (!matrixBody) return;
+
+    const matrixData = [
+        { name: "Wireless Noise-Canceling Headphones", amazon: "$199.99", walmart: "$210.00", target: "$205.00", best: "Amazon ($199.99)" },
+        { name: "Smart Weather Station Hub", amazon: "$84.50", walmart: "$79.99", target: "$89.00", best: "Walmart ($79.99)" },
+        { name: "Seasonal LED Projector", amazon: "$49.99", walmart: "$52.00", target: "$49.99", best: "Amazon / Target ($49.99)" }
+    ];
+
+    matrixBody.innerHTML = matrixData.map(row => `
+        <tr class="hover:bg-white/5 transition-all">
+            <td class="p-3 font-medium text-white">${row.name} ${isBoringNerdMode ? '<span class="text-[10px] text-sky-400 font-mono">[SKU-ID: 9942]</span>' : ''}</td>
+            <td class="p-3 text-slate-400">${row.amazon}</td>
+            <td class="p-3 text-slate-400">${row.walmart}</td>
+            <td class="p-3 text-slate-400">${row.target}</td>
+            <td class="p-3 text-emerald-400 font-bold">${row.best}</td>
+        </tr>
+    `).join('');
+}
+
+// --- Feature 3: Interactive Price Predictor Sparkline Generator ---
 function generatePriceChartSVG() {
-    // Simulated 12-month historical & forecast price points
     const points = [65, 70, 85, 90, 80, 75, 60, 55, 65, 85, 95, 70];
     const max = Math.max(...points);
     const min = Math.min(...points);
@@ -58,7 +126,9 @@ function generatePriceChartSVG() {
         </div>
     `;
 }
-        function exportWishlistPrint() {
+
+// --- Feature 4: Printable PDF / Checklist Export ---
+function exportWishlistPrint() {
     if (!lastWishlistData) {
         alert("Please generate a wishlist first before exporting.");
         return;
@@ -69,7 +139,7 @@ function generatePriceChartSVG() {
         <html>
         <head>
             <title>${lastWishlistData.wishlist_name} - Printable Checklist</title>
-            style>
+            <style>
                 body { font-family: sans-serif; padding: 20px; color: #000; }
                 h1 { font-size: 24px; margin-bottom: 5px; }
                 .item { border-bottom: 1px solid #ccc; padding: 10px 0; display: flex; justify-content: space-between; }
@@ -78,20 +148,20 @@ function generatePriceChartSVG() {
         </head>
         <body>
             <h1>📋 ${lastWishlistData.wishlist_name}</h1>
-            <p>Generated via Ultimate Seasonal Tech & Wishlist Hub</p>
+            <p>Generated via Apple Music Style Seasonal Tech & Wishlist Hub</p>
             <hr/>
             <div>
                 ${lastWishlistData.items.map((item, i) => `
                     <div class="item">
                         <div>[ ] <strong>#${i+1}:${item.title}</strong></div>
-                        <div>Est: ${item.currency}${item.christmas_forecast_price.toFixed(2)}</div>
+                        <div>Est: ${lastWishlistData.currency}${item.christmas_forecast_price.toFixed(2)}</div>
                     </div>
                 `).join('')}
             </div>
             <div class="total">
                 Total Forecast: ${lastWishlistData.currency}${lastWishlistData.total_christmas_price.toFixed(2)}
             </div>
-            script>
+            <script>
                 window.print();
             </script>
         </body>
@@ -99,73 +169,18 @@ function generatePriceChartSVG() {
     `);
     printWindow.document.close();
 }
-        
-        if (isBoringMode) {
-            // BORING NERD / SERIOUS SHOPPING VIEW
-            card.className = 'bg-slate-950 border border-sky-900/60 p-6 rounded-2xl space-y-4 font-mono shadow-xl';
-            card.innerHTML = `
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2 border-b border-slate-900 pb-3">
-                    <div>
-                        <span class="text-xs text-sky-400 bg-sky-950/80 border border-sky-800 px-2.5 py-1 rounded-md mr-2">INDEX #[${index + 1}]</span>
-                        <h4 class="font-bold text-base text-slate-100 inline-block">${item.title}</h4>
-                    </div>
-                    <div class="text-right text-xs space-y-0.5">
-                        <div class="text-slate-400">Baseline MSY: $${(item.original_price * 0.05).toFixed(2)}/mo</div>
-                        <div class="text-sky-300 font-bold">Volatility Index: Low (Stable)</div>
-                    </div>
-                </div>
 
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                    <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                        <span class="text-slate-500 block">REGULAR PRICE</span>
-                        <strong class="text-slate-200 text-sm">$${item.original_price.toFixed(2)}</strong>
-                    </div>
-                    <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                        <span class="text-slate-500 block">CURRENT VARIANCE</span>
-                        <strong class="text-emerald-400 text-sm">$${item.sale_price.toFixed(2)}</strong>
-                    </div>
-                    <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                        <span class="text-slate-500 block">HISTORICAL LOW (90D)</span>
-                        <strong class="text-amber-400 text-sm">$${(item.sale_price * 0.92).toFixed(2)}</strong>
-                    </div>
-                    <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-                        <span class="text-slate-500 block">VALUE VERDICT</span>
-                        <strong class="text-sky-400 text-sm">BUY RECOMMENDED</strong>
-                    </div>
-                </div>
+// --- App Initialization on DOM Load ---
+document.addEventListener('DOMContentLoaded', () => {
+    updatePriceMatrix();
+    console.log("Apple Music UI & Nerd Mode framework initialized.");
+});
 
-                <div class="bg-slate-900/40 border border-slate-800 p-4 rounded-xl space-y-2 text-xs">
-                    <div class="flex justify-between">
-                        <span class="text-slate-400">Estimated Cost-Per-Use (1 Year Projection):</span>
-                        <span class="text-slate-200 font-bold">$0.42 / day</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-400">Resale Value Retention (Estimated 12M):</span>
-                        <span class="text-emerald-400 font-bold">68% Market Retention</span>
-                    </div>
-                    <div class="flex justify-between">
-                        <span class="text-slate-400">Inflation-Adjusted Discount Delta:</span>
-                        <span class="text-amber-400 font-bold">-14.2% vs 2025 Average</span>
-                    </div>
-                </div>
-            `;
-        } else {
-            // CUTE & FLASHY DEFAULT VIEW
-            card.className = 'bg-slate-950 border border-pink-900/30 p-6 rounded-2xl space-y-4 shadow-lg';
-            card.innerHTML = `
-                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-2">
-                    <div>
-                        <span class="text-xs font-mono text-pink-300 bg-pink-950/60 border border-pink-800/50 px-2.5 py-1 rounded-lg mr-2 font-bold">🎁 Gift #${index + 1}</span>
-                        <h4 class="font-bold text-lg text-slate-100 inline-block mt-1">${item.title}</h4>
-                    </div>
-                    <div class="text-right space-y-0.5">
-                        <div class="text-xs text-slate-400 line-through">Reg: $${item.original_price.toFixed(2)}</div>
-                        <div class="text-sm text-slate-300">Now: $${item.sale_price.toFixed(2)}</div>
-                        <div class="text-lg font-black text-amber-300">✨ Forecast: $${item.christmas_forecast_price.toFixed(2)}</div>
-                    </div>
-                </div>
-            `;
-        }
-        itemsContainer.appendChild(card);
-    });
+function togglePlaybackState() {
+    const btn = document.getElementById('play-pause-btn');
+    if (btn.innerText === "▶") {
+        btn.innerText = "⏸";
+    } else {
+        btn.innerText = "▶";
+    }
 }
