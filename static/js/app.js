@@ -30,6 +30,34 @@ function renderWishlistItems(data) {
 
     data.items.forEach((item, index) => {
         const card = document.createElement('div');
+        // Function to generate an SVG price trajectory sparkline / chart
+function generatePriceChartSVG() {
+    // Simulated 12-month historical & forecast price points
+    const points = [65, 70, 85, 90, 80, 75, 60, 55, 65, 85, 95, 70];
+    const max = Math.max(...points);
+    const min = Math.min(...points);
+    const height = 40;
+    const width = 180;
+    
+    let pathD = "";
+    points.forEach((val, index) => {
+        const x = (index / (points.length - 1)) * width;
+        const y = height - ((val - min) / (max - min || 1)) * height;
+        pathD += (index === 0 ? `M ${x} ${y}` : ` L ${x} ${y}`);
+    });
+
+    return `
+        <div class="bg-slate-900/60 p-3 rounded-xl border border-slate-800 space-y-1">
+            <div class="flex justify-between text-[10px] text-slate-400 font-mono">
+                <span>12-Month Price Trajectory</span>
+                <span class="text-amber-400">Peak: Nov/Dec</span>
+            </div>
+            <svg class="w-full h-10 overflow-visible" viewBox="0 0 ${width} ${height}">
+                <path d="${pathD}" fill="none" stroke="#f59e0b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </div>
+    `;
+}
         
         if (isBoringMode) {
             // BORING NERD / SERIOUS SHOPPING VIEW
