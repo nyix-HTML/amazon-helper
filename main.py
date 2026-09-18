@@ -1,6 +1,6 @@
 import os
 import random
-from typing import Optional
+from typing import Optional, List
 from pathlib import Path
 from fastapi import FastAPI, Request
 from fastapi.staticfiles import StaticFiles
@@ -35,6 +35,12 @@ class TechAdvisorRequest(BaseModel):
     url: Optional[str] = None
     prompt: Optional[str] = None
 
+class WishlistRequest(BaseModel):
+    urls: Optional[List[str]] = None
+    url: Optional[str] = None
+    theme: Optional[str] = None
+    name: Optional[str] = None
+
 # Routes
 @app.get("/")
 async def read_root(request: Request):
@@ -63,4 +69,18 @@ async def get_santa_status():
         "speed_mph": speed_mph,
         "presents_delivered": presents_delivered,
         "status": "In Flight 🎅"
+    }
+
+@app.post("/api/forecast")
+@app.post("/api/wishlist")
+@app.post("/api/scrape")
+async def handle_wishlist_or_scrape(payload: WishlistRequest):
+    return {
+        "success": True,
+        "message": "Wishlist processed successfully!",
+        "forecast": {
+            "predicted_savings": "$24.50",
+            "best_time_to_buy": "Early December",
+            "price_trend": "Stable to dropping"
+        }
     }
