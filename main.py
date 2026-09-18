@@ -25,8 +25,8 @@ class ProductRequest(BaseModel):
 
 @app.get("/")
 async def read_root(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
-
+    return templates.TemplateResponse(request=request, name="index.html")
+    
 @app.post("/api/scrape")
 async def scrape_product(payload: ProductRequest):
     result = await scrape_amazon_product(payload.url)
