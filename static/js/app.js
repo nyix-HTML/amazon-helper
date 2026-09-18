@@ -36,12 +36,12 @@ function initSnow() {
         container.appendChild(flake);
     }
 }
-document.addEventListener('DOMContentLoaded', initSnow);
 
-// Christmas Countdown Logic
+// Christmas Countdown Logic & Santa Tracker
 function updateCountdown() {
     const timerElem = document.getElementById('countdown-timer');
-    if (!timerElem) return;
+    const countdownEl = document.getElementById('christmas-countdown');
+    
     const now = new Date();
     const currentYear = now.getFullYear();
     let xmas = new Date(currentYear, 11, 25);
@@ -50,10 +50,18 @@ function updateCountdown() {
     }
     const diffTime = xmas - now;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    timerElem.innerText = `${diffDays} Days Left!`;
+    
+    if (timerElem) timerElem.innerText = `${diffDays} Days Left!`;
+    
+    const days = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diffTime / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((diffTime / 1000 / 60) % 60);
+    const seconds = Math.floor((diffTime / 1000) % 60);
+    
+    if (countdownEl) {
+        countdownEl.innerText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+    }
 }
-setInterval(updateCountdown, 1000);
-updateCountdown();
 
 const themeStyles = {
     'festive-red': { border: 'border-red-900/60', bg: 'bg-red-950/40', badge: 'bg-red-900 text-red-200 border border-red-700' },
@@ -297,7 +305,7 @@ async function runTechAdvisor() {
         loading.classList.add('hidden');
     }
 }
-// Function to fetch and update Santa's status
+
 async function updateSantaTracker() {
     try {
         const response = await fetch('/api/santa-status');
@@ -313,33 +321,11 @@ async function updateSantaTracker() {
     }
 }
 
-// Countdown timer to Christmas Eve (Dec 24)
-function updateCountdown() {
-    const now = new Date();
-    let christmas = new Date(now.getFullYear(), 11, 24); // Dec 24
-    if (now > christmas) {
-        christmas.setFullYear(christmas.getFullYear() + 1);
-    }
-    
-    const diff = christmas - now;
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-    const minutes = Math.floor((diff / 1000 / 60) % 60);
-    const seconds = Math.floor((diff / 1000) % 60);
-    
-    const countdownEl = document.getElementById('christmas-countdown');
-    if (countdownEl) {
-        countdownEl.innerText = `${days}d ${hours}h ${minutes}m ${seconds}s`;
-    }
-}
-
-// Run tracker updates on load and set intervals
 document.addEventListener('DOMContentLoaded', () => {
+    initSnow();
     updateSantaTracker();
     updateCountdown();
     
-    // Refresh Santa location every 6 seconds
     setInterval(updateSantaTracker, 6000);
-    // Update countdown every second
     setInterval(updateCountdown, 1000);
 });
