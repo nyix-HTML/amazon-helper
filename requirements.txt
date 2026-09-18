@@ -1,6 +1,6 @@
 fastapi
-uvicorn[standard]
-aiohttp
+uvicorn
+httpx
 beautifulsoup4
-google-genai
-pydantic
+python-dotenv
+jinja2
