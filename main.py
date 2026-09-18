@@ -39,8 +39,8 @@ class TechAdvisorRequest(BaseModel):
 
 # Routes
 @app.get("/")
-async def read_root(request: Request):
-    return templates.TemplateResponse(request=request, name="index.html")
+def read_root():
+    return {"status": "online", "message": "Seasonal Tech Hub API is running successfully!"}
 
 @app.post("/api/analyze-wishlist")
 async def analyze_wishlist(payload: WishlistRequest):
