@@ -58,6 +58,47 @@ function generatePriceChartSVG() {
         </div>
     `;
 }
+        function exportWishlistPrint() {
+    if (!lastWishlistData) {
+        alert("Please generate a wishlist first before exporting.");
+        return;
+    }
+    
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(`
+        <html>
+        <head>
+            <title>${lastWishlistData.wishlist_name} - Printable Checklist</title>
+            style>
+                body { font-family: sans-serif; padding: 20px; color: #000; }
+                h1 { font-size: 24px; margin-bottom: 5px; }
+                .item { border-bottom: 1px solid #ccc; padding: 10px 0; display: flex; justify-content: space-between; }
+                .total { font-weight: bold; margin-top: 20px; font-size: 18px; }
+            </style>
+        </head>
+        <body>
+            <h1>📋 ${lastWishlistData.wishlist_name}</h1>
+            <p>Generated via Ultimate Seasonal Tech & Wishlist Hub</p>
+            <hr/>
+            <div>
+                ${lastWishlistData.items.map((item, i) => `
+                    <div class="item">
+                        <div>[ ] <strong>#${i+1}:${item.title}</strong></div>
+                        <div>Est: ${item.currency}${item.christmas_forecast_price.toFixed(2)}</div>
+                    </div>
+                `).join('')}
+            </div>
+            <div class="total">
+                Total Forecast: ${lastWishlistData.currency}${lastWishlistData.total_christmas_price.toFixed(2)}
+            </div>
+            script>
+                window.print();
+            </script>
+        </body>
+        </html>
+    `);
+    printWindow.document.close();
+}
         
         if (isBoringMode) {
             // BORING NERD / SERIOUS SHOPPING VIEW
